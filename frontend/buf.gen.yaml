@@ -1,0 +1,12 @@
+# Generates TypeScript from the shared .proto contract: `npm run gen`.
+# protoc-gen-es emits message types AND service descriptors that
+# @connectrpc/connect turns into a typed client.
+version: v2
+inputs:
+  - directory: ../proto
+plugins:
+  - local: protoc-gen-es
+    out: src/gen
+    opt:
+      - target=ts
+      - import_extension=none

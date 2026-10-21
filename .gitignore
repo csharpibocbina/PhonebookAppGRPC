@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+*.user
+*.db
+*.db-shm
+*.db-wal
+TestResults/
+.vs/
+
+# Node
+node_modules/
+dist/
+coverage/
+*.log
+
+# Env
+.env
+.DS_Store
+.idea/

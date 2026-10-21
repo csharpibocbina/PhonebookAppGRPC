@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Phonebook.Api/Phonebook.Api.csproj" />
+    <Project Path="src/Phonebook.Application/Phonebook.Application.csproj" />
+    <Project Path="src/Phonebook.Domain/Phonebook.Domain.csproj" />
+    <Project Path="src/Phonebook.Infrastructure/Phonebook.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Phonebook.IntegrationTests/Phonebook.IntegrationTests.csproj" />
+    <Project Path="tests/Phonebook.UnitTests/Phonebook.UnitTests.csproj" />
+  </Folder>
+</Solution>
