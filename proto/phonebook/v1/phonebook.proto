@@ -1,0 +1,109 @@
+// =============================================================================
+// phonebook.proto: the contract for managing contacts.
+// Every method needs a signed-in user (the server class has [Authorize]).
+// =============================================================================
+syntax = "proto3";
+
+package phonebook.v1;
+
+option csharp_namespace = "Phonebook.Api.Protos.Phonebook";
+
+import "google/api/annotations.proto";
+// "Well-known types" ship with protobuf. Timestamp becomes DateTime-like
+// helpers in C# and a Timestamp message in TypeScript.
+import "google/protobuf/timestamp.proto";
+
+service PhonebookService {
+  // All five methods are "unary": one request in, one response out.
+  // gRPC also supports server, client and bidirectional streaming. This app
+  // pushes live events with SignalR instead (see README).
+  rpc CreateContact (CreateContactRequest) returns (Contact) {
+    option (google.api.http) = { post: "/v1/contacts" body: "*" };
+  }
+  rpc GetContact (GetContactRequest) returns (Contact) {
+    // {id} binds the URL segment to GetContactRequest.id
+    option (google.api.http) = { get: "/v1/contacts/{id}" };
+  }
+  rpc ListContacts (ListContactsRequest) returns (ListContactsResponse) {
+    // For GET, the other request fields become query-string parameters:
+    // /v1/contacts?page=1&pageSize=20&search=ann
+    option (google.api.http) = { get: "/v1/contacts" };
+  }
+  rpc UpdateContact (UpdateContactRequest) returns (Contact) {
+    option (google.api.http) = { put: "/v1/contacts/{id}" body: "*" };
+  }
+  rpc DeleteContact (DeleteContactRequest) returns (DeleteContactResponse) {
+    option (google.api.http) = { delete: "/v1/contacts/{id}" };
+  }
+}
+
+message Contact {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string phone_number = 4;
+  string email = 5;
+  string address = 6;
+  string notes = 7;
+  bool is_favorite = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+// proto3 has no "required": every field has a default ("" / 0 / false).
+// Validation happens on the server (FluentValidation) and comes back as
+// the INVALID_ARGUMENT status code.
+message CreateContactRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string phone_number = 3;
+  string email = 4;
+  string address = 5;
+  string notes = 6;
+  bool is_favorite = 7;
+}
+
+message GetContactRequest {
+  string id = 1;
+}
+
+message UpdateContactRequest {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string phone_number = 4;
+  string email = 5;
+  string address = 6;
+  string notes = 7;
+  bool is_favorite = 8;
+}
+
+message DeleteContactRequest {
+  string id = 1;
+}
+
+message DeleteContactResponse {}
+
+message ListContactsRequest {
+  int32 page = 1;       // 1-based, 0 means 1
+  int32 page_size = 2;  // 0 means 20, max 100
+  string search = 3;    // matches first/last name, phone or email
+  SortBy sort_by = 4;
+  bool favorites_only = 5;
+}
+
+// proto3 enums must start with a zero value. It's the default when the
+// client doesn't set the field, so make it mean "not specified".
+enum SortBy {
+  SORT_BY_UNSPECIFIED = 0;
+  SORT_BY_FIRST_NAME = 1;
+  SORT_BY_LAST_NAME = 2;
+  SORT_BY_CREATED_AT = 3;
+}
+
+message ListContactsResponse {
+  repeated Contact contacts = 1; // "repeated" = a list
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}

@@ -1,0 +1,85 @@
+// =============================================================================
+// auth.proto: the contract for signing in.
+//
+// gRPC is "contract first". This file is the single source of truth:
+//   * The C# build (Grpc.Tools) turns it into AuthService.AuthServiceBase,
+//     which the server overrides, plus one C# class per message.
+//   * The React build (buf + protoc-gen-es) turns it into TypeScript types
+//     and a typed client.
+// Change the contract here and both sides get the new types.
+// =============================================================================
+syntax = "proto3";
+
+package auth.v1;
+
+option csharp_namespace = "Phonebook.Api.Protos.Auth";
+
+// Gives every RPC a REST route too (gRPC JSON transcoding). That's what makes
+// the service show up in the Scalar API docs at /scalar.
+import "google/api/annotations.proto";
+
+service AuthService {
+  // Each rpc is a method you call like a local function. Over the wire it is
+  // an HTTP/2 POST to /auth.v1.AuthService/<MethodName> with a binary body.
+  rpc Register (RegisterRequest) returns (AuthResponse) {
+    option (google.api.http) = { post: "/v1/auth/register" body: "*" };
+  }
+  rpc Login (LoginRequest) returns (AuthResponse) {
+    option (google.api.http) = { post: "/v1/auth/login" body: "*" };
+  }
+  // Swaps a refresh token for a new access + refresh token pair (rotation).
+  rpc Refresh (RefreshRequest) returns (AuthResponse) {
+    option (google.api.http) = { post: "/v1/auth/refresh" body: "*" };
+  }
+  rpc Logout (LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = { post: "/v1/auth/logout" body: "*" };
+  }
+  // Needs a valid access token in the "authorization: Bearer ..." metadata.
+  rpc Me (MeRequest) returns (UserProfile) {
+    option (google.api.http) = { get: "/v1/auth/me" };
+  }
+}
+
+// The numbers (= 1, = 2, ...) are field tags. Only the tag goes on the wire,
+// not the name, which keeps messages small. Never change or reuse a tag once
+// it has shipped: that's how old and new clients stay compatible.
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+  string display_name = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// Browsers leave this empty: the refresh token travels in an httpOnly cookie.
+// Other clients (grpcurl, Scalar, mobile apps) can pass it here.
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+// An empty message is the gRPC way to say "void". Using a message instead of
+// nothing means we can add fields later without breaking anyone.
+message LogoutResponse {}
+
+message MeRequest {}
+
+message AuthResponse {
+  string access_token = 1;
+  int64 access_token_expires_at = 2; // unix seconds
+  string refresh_token = 3;          // also set as an httpOnly cookie
+  int64 refresh_token_expires_at = 4; // unix seconds
+  UserProfile user = 5;               // messages can contain other messages
+}
+
+message UserProfile {
+  string id = 1;
+  string email = 2;
+  string display_name = 3;
+}
